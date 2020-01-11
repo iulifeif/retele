@@ -59,7 +59,7 @@ int main()
   char *test_cmd = "CREATE TABLE test(id int, name text);";
 
   rc = sqlite3_open("test.db", &db);
-
+//
   if (rc)
   {
     fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
