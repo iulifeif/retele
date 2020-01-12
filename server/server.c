@@ -60,7 +60,11 @@ static void *thread_loop(void *arg)
     while (!cd->question_ready_flag)
     {
       sleep(1);
+      if(cd->game_over_flag)
+        break;
     }
+    if(cd->game_over_flag)
+        break;
     cd->question_ready_flag = 0;
     cmd = 2;
     write(sd, &cmd, sizeof(int));
@@ -164,7 +168,7 @@ struct game_data wait_clients(struct game_data gd)
 void game_loop(struct game_data gd)
 {
   sqlite3 *db = open_db();
-  for (int qid = 1; qid <= 10; qid++)
+  for (int qid = 1; qid <= 3; qid++)
   {
     struct question q = get_question(db, qid);
     for (int cid = 0; cid < gd.nr_clients; cid++)
@@ -193,7 +197,13 @@ void game_loop(struct game_data gd)
     gd.clients_data[id_scor_maxim]->name);
     gd.clients_data[cid]->game_over_flag=1;
   }
+  for(int cid = 0; cid < gd.nr_clients; cid++)
+  {
+    pthread_join(gd.clients_threads[cid],NULL);
+  }
 }
+
+
 
 int main()
 {
