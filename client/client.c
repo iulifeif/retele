@@ -19,6 +19,10 @@ extern int errno;
 /* portul de conectare la server*/
 int port;
 
+void send_username(int);
+void send_answer(int);
+void end_game(int);
+
 int main (int argc, char *argv[])
 {
   int sd;			// descriptorul de socket
@@ -84,8 +88,8 @@ int main (int argc, char *argv[])
       running=0;
       break;
     }
-    close(sd);
   }
+  close(sd);
 }
 
 void end_game(int sd)
@@ -100,8 +104,9 @@ void send_username(int sd)
   char username[100];
   printf("Introdu un username: ");
   scanf("%s",username);
-  write(sd,strlen(username)+1,sizeof(int));
-  write(sd,username,strlen(username)+1);
+  int username_length = strlen(username)+1;
+  write(sd,&username_length,sizeof(int));
+  write(sd,username,username_length);
 }
 
 void send_answer(int sd)
@@ -112,7 +117,7 @@ void send_answer(int sd)
   read(sd,&question_length,sizeof(int));
   read(sd,question,question_length);
   printf("%s", question);
-  scanf("%d", answer);
-  write(sd,answer,sizeof(int));
+  scanf("%d", &answer);
+  write(sd, &answer,sizeof(int));
 }
 

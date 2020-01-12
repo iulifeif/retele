@@ -42,13 +42,16 @@ static void *thread_loop(void *arg)
 {
   struct client_data *cd = (struct client_data *)arg;
   int sd = cd->client_sd;
-
+  int cmd;
   int username_length;
   char username[100];
-  write(sd, 1, sizeof(int));
+  cmd = 1;
+  write(sd, &cmd, sizeof(int));
   read(sd, &username_length, sizeof(int));
   read(sd, username, username_length);
   strcpy(cd->name, username);
+  printf("User inregistrat: %s\n", cd->name);
+  fflush(stdout);
   cd->client_registred_flag = 1;
   char buffer[500];
   int raspuns;
@@ -59,22 +62,25 @@ static void *thread_loop(void *arg)
       sleep(1);
     }
     cd->question_ready_flag = 0;
-    write(sd, 2, sizeof(int));
+    cmd = 2;
+    write(sd, &cmd, sizeof(int));
     sprintf(buffer, "enunt: %s\n1: %s\n2: %s\n3: %s",
             cd->qst.enunt,
             cd->qst.raspuns1,
             cd->qst.raspuns2,
             cd->qst.raspuns3);
-    write(sd, strlen(buffer) + 1, sizeof(int));
-    write(sd, buffer, strlen(buffer) + 1);
-    read(sd, raspuns, sizeof(int));
+    int buffer_len = strlen(buffer) + 1;
+    write(sd, &buffer_len, sizeof(int));
+    write(sd, buffer, buffer_len);
+    read(sd, &raspuns, sizeof(int));
     if (raspuns == cd->qst.raspuns_corect)
       cd->scor += 10;
     cd->answer_ready_flag = 1; //nu i mai mancau dinozaurii
   }
 
-  write(sd, 3, sizeof(int));
-  write(sd, cd->scor, sizeof(int));
+  cmd = 3;
+  write(sd, &cmd, sizeof(int));
+  write(sd, &cd->scor, sizeof(int));
   cd->game_over_flag = 1;
 }
 
@@ -116,6 +122,8 @@ struct game_data wait_clients(struct game_data gd)
   {
     perror("[server]Eroare la listen().\n");
   }
+  printf("Asteptam clienti\n");
+  fflush(stdout);
   while (gd.nr_clients <= 3)
   {
     int client_sd;
@@ -125,16 +133,18 @@ struct game_data wait_clients(struct game_data gd)
       perror("[server]Eroare la accept().\n");
       continue;
     }
+    printf("Client conectat #%d\n", gd.nr_clients+1);
+    fflush(stdout);
     client_data *cl;
     cl = (struct client_data *)malloc(sizeof(struct client_data));
     cl->client_sd = client_sd;
-    gd.clients_data[gd.nr_clients] = cl;
     cl->idThread = gd.nr_clients;
     cl->client_registred_flag = 0;
     cl->game_over_flag = 0;
     cl->question_ready_flag = 0;
     cl->answer_ready_flag = 0;
     cl->scor = 0;
+    gd.clients_data[gd.nr_clients] = cl;
     pthread_create(
         &(gd.clients_threads[gd.nr_clients++]),
         NULL,
@@ -163,6 +173,7 @@ void game_loop(struct game_data gd)
       gd.clients_data[cid]->question_ready_flag = 1;
       while (!gd.clients_data[cid]->answer_ready_flag)
         sleep(1);
+      gd.clients_data[cid]->answer_ready_flag = 0;
     }
   }
   int scor_maxim=0;
@@ -187,6 +198,7 @@ void game_loop(struct game_data gd)
 int main()
 {
   struct game_data gd;
+  gd.nr_clients = 0;
   gd = wait_clients(gd);
   game_loop(gd);
   return 0;
