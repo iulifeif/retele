@@ -1,0 +1,65 @@
+
+1. Cate camine detine Universitatea Alexandru Ioan Cuza?
+	12, 14, 13
+2.Cate cantine detine Universitatea Alexandru Ioan Cuza?
+	4,2,niciuna
+3. Chiar exista gandaci in camin?
+	da, nu, depinde de camin
+4. Este frumoasa viata de student?
+	da, nu, uneori
+5. Pana la cati ani se poate prelungi licenta la Facultatea de Informatica?
+	3,7,infinit
+6. Cate programe de master exista la Facultatea de Informatica?
+	7,3,6
+7.Ceva random 
+	da, nu, poate 
+8. Altceva random
+	da, nu, poate 
+9. Nimic random 
+	ori,da,sau
+10. Ultima dar nu cea din urma 
+	cum sa nu, chiar nu, hai sa nu 
+
+
+
+Baza mea de date are doua tabele 
+Primul tabel pentru retinerea numelui jucatorilor si a punctajelor lor (doua coloane)
+Celalalt tabel pentru a retine intrebarea, indicativ pentru raspuns corect si 3 raspunsuri (5 coloane)
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1,ANSWER2,ANSWER3)"  \
+"VALUES ('Cate camine detine Universitatea Alexandru Ioan Cuza?'1,12,14,13); " \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)"  \
+"VALUES ('2.Cate cantine detine Universitatea Alexandru Ioan Cuza?',2,4,2,'niciuna'); "     \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('3. Chiar exista gandaci in camin?',3,'da','nu','depinde de camin');" \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('4. Este frumoasa viata de student?',2,'nu','da','uneori');" \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('5. Pana la cati ani se poate prelungi licenta la Facultatea de Informatica?',3,3,7,'infinit');" \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('6. Cate programe de master exista la Facultatea de Informatica?',3,5,7,6);" \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('7.Ceva random ',2,'da','nu','poate');" \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('8. Altceva random',1,'da','nu','poate');" \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('9. Nimic random ',3,'ori','da','sau');" \
+
+"INSERT INTO data_questions (QUESTION,NR,ANSWER1, ANSWER2, ANSWER3)" \
+"VALUES ('10. Ultima dar nu cea din urma ',2,'cum sa nu','hai sa nu','chiar nu');" \
+
+
+
+
+
+
+
+

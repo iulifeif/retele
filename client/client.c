@@ -58,33 +58,61 @@ int main (int argc, char *argv[])
       perror ("[client]Eroare la connect().\n");
       return errno;
     }
-
-  /* citirea mesajului */
-  printf ("[client]Introduceti un numar: ");
-  fflush (stdout);
-  read (0, buf, sizeof(buf));
-  nr=atoi(buf);
-  //scanf("%d",&nr);
-  
-  printf("[client] Am citit %d\n",nr);
-
-  /* trimiterea mesajului la server */
-  if (write (sd,&nr,sizeof(int)) <= 0)
+  int running=1;
+  while(running)
+  {
+    int cmd;
+    if(-1 == read(sd,&cmd,sizeof(int)))
     {
-      perror ("[client]Eroare la write() spre server.\n");
-      return errno;
+      printf("%s",strerror(errno));
+      exit(errno);
     }
-
-  /* citirea raspunsului dat de server 
-     (apel blocant pina cind serverul raspunde) */
-  if (read (sd, &nr,sizeof(int)) < 0)
+    switch (cmd)
     {
-      perror ("[client]Eroare la read() de la server.\n");
-      return errno;
-    }
-  /* afisam mesajul primit */
-  printf ("[client]Mesajul primit este: %d\n", nr);
+    case 1:
+      send_username(sd);
+      break;
+    case 2:
+      send_answer(sd);
+      break;
+    case 3:
+      end_game(sd);
+      running=0;
+      break;
 
-  /* inchidem conexiunea, am terminat */
-  close (sd);
+    default:
+      running=0;
+      break;
+    }
+    close(sd);
+  }
 }
+
+void end_game(int sd)
+{
+  int scor;
+  read(sd,&scor,sizeof(int));
+  printf("Jocul s-a sfarsit!\nScorul tau este: %d\n",scor);
+}
+
+void send_username(int sd)
+{
+  char username[100];
+  printf("Introdu un username: ");
+  scanf("%s",username);
+  write(sd,strlen(username)+1,sizeof(int));
+  write(sd,username,strlen(username)+1);
+}
+
+void send_answer(int sd)
+{
+  int answer;
+  int question_length;
+  char question[500];
+  read(sd,&question_length,sizeof(int));
+  read(sd,question,question_length);
+  printf("%s", question);
+  scanf("%d", answer);
+  write(sd,answer,sizeof(int));
+}
+
