@@ -210,10 +210,10 @@ int main()
 {
   int desfasurare_joc=1;
   struct game_data gd;
+  gd = wait_clients(gd);
   while(desfasurare_joc)
   {
     gd.nr_clients = 0;
-    gd = wait_clients(gd);
     game_loop(gd);
   }
   return 0;

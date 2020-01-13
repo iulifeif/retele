@@ -7,9 +7,15 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <string.h>
+#include <signal.h>
 
 /* codul de eroare returnat de anumite apeluri */
 extern int errno;
+
+void handler(int signo)
+{
+  return;
+}
 
 /* portul de conectare la server*/
 int port;
@@ -17,7 +23,6 @@ int port;
 void send_username(int);      //functiile pe care le poate apela clientul
 void send_answer(int);
 void end_game(int);
-void end_game_forced(int);
 
 int main (int argc, char *argv[])
 {
@@ -80,9 +85,6 @@ int main (int argc, char *argv[])
       end_game(sd);
       running=0;
       break;
-    case 4:
-      end_game_forced(sd);
-      break;
 
     default:
       running=0;
@@ -110,11 +112,27 @@ void send_answer(int sd)      //desfasoara sesiunea de joc
   read(sd,&question_length,sizeof(int));
   read(sd,question,question_length);
   printf("%s \n", question);
-  scanf("%d", &answer);
-  while(answer<1 || answer>4)
+
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGALRM, &sa, NULL);
+
+  alarm(5);
+
+  if (scanf("%d", &answer) == 1)
   {
-    printf("Acest numar nu exista! Introdu alt numar!\n");
-    scanf("%d", &answer);
+    if(answer<1 || answer>3)
+      printf("Numarul %d nu este o comanda valida!\nLa aceasta intrebare nu vrei fi punctat!", answer);
+    else
+      printf("Am primit raspunsul: %d\n", answer);
+    alarm(0); // opreste alarma
+  }
+  else
+  {
+    printf("S-a scurs timpul!\nLa aceasta intrebare nu vei fi punctat!\n");
+    answer = 0;
   }
   write(sd, &answer,sizeof(int));
 }
@@ -124,11 +142,4 @@ void end_game(int sd)
   int scor;
   read(sd,&scor,sizeof(int));
   printf("Jocul s-a sfarsit!\nScorul tau este: %d\n",scor);
-}
-
-void end_game_forced(int sd)
-{
-  int scor;
-  read(sd,&scor,sizeof(int));
-  printf("Ati acumulat %d puncte!\n S-a terminat jocul pentru dumneavoastra!\n Puteti inchide consola!\n", scor);
 }
