@@ -14,10 +14,10 @@
 /* portul folosit */
 #define PORT 2908
 
-typedef struct client_data
+typedef struct client_data      //datele despre clienti
 {
   char name[100];
-  int client_sd; //sd ul clientului respectiv
+  int client_sd;      //sd ul clientului respectiv
   int question_ready_flag;
   int client_registred_flag;
   int answer_ready_flag;
@@ -25,10 +25,10 @@ typedef struct client_data
   char game_winner[100];
   int scor;
   struct question qst;
-  int idThread; //id-ul thread-ului tinut in evidenta de acest program
+  int idThread;     //id-ul thread-ului tinut in evidenta 
 } client_data;
 
-struct game_data
+struct game_data      //datele despre joc
 {
   int nr_clients;
   struct client_data *clients_data[100];
@@ -68,7 +68,7 @@ static void *thread_loop(void *arg)
     cd->question_ready_flag = 0;
     cmd = 2;
     write(sd, &cmd, sizeof(int));
-    sprintf(buffer, "enunt: %s\n1: %s\n2: %s\n3: %s",
+    sprintf(buffer, "enunt: %s\n1: %s\n2: %s\n3: %s\n Introdu numarul raspunsului:",
             cd->qst.enunt,
             cd->qst.raspuns1,
             cd->qst.raspuns2,
@@ -76,10 +76,10 @@ static void *thread_loop(void *arg)
     int buffer_len = strlen(buffer) + 1;
     write(sd, &buffer_len, sizeof(int));
     write(sd, buffer, buffer_len);
-    read(sd, &raspuns, sizeof(int));
+    read(sd, &raspuns, sizeof(int));      
     if (raspuns == cd->qst.raspuns_corect)
       cd->scor += 10;
-    cd->answer_ready_flag = 1; //nu i mai mancau dinozaurii
+    cd->answer_ready_flag = 1;                           //nu i mai mancau dinozaurii
   }
 
   cmd = 3;
@@ -126,9 +126,9 @@ struct game_data wait_clients(struct game_data gd)
   {
     perror("[server]Eroare la listen().\n");
   }
-  printf("Asteptam clienti\n");
+  printf("Asteptam sa se conecteze 5 clienti\n");
   fflush(stdout);
-  while (gd.nr_clients <= 3)
+  while (gd.nr_clients < 5)
   {
     int client_sd;
     /* acceptam un client (stare blocanta pina la realizarea conexiunii) */
@@ -137,11 +137,11 @@ struct game_data wait_clients(struct game_data gd)
       perror("[server]Eroare la accept().\n");
       continue;
     }
-    printf("Client conectat #%d\n", gd.nr_clients+1);
+    printf("Client-ul cu id-ul: %d s-a conectat\n", gd.nr_clients+1);
     fflush(stdout);
-    client_data *cl;
+    client_data *cl;      //datele despre clientul actual
     cl = (struct client_data *)malloc(sizeof(struct client_data));
-    cl->client_sd = client_sd;
+    cl->client_sd = client_sd;      //se initializeaza threadurile pentru acesta
     cl->idThread = gd.nr_clients;
     cl->client_registred_flag = 0;
     cl->game_over_flag = 0;
@@ -168,14 +168,14 @@ struct game_data wait_clients(struct game_data gd)
 void game_loop(struct game_data gd)
 {
   sqlite3 *db = open_db();
-  for (int qid = 1; qid <= 3; qid++)
+  for (int qid = 1; qid < 3; qid++)     //////////// numarul de intrebari la care vreau sa raspunda clientii
   {
-    struct question q = get_question(db, qid);
-    for (int cid = 0; cid < gd.nr_clients; cid++)
+    struct question q = get_question(db, qid);      //q primeste intrebarile 
+    for (int cid = 0; cid < gd.nr_clients; cid++)     //pentru toti clientii 
     {
-      gd.clients_data[cid]->qst = q;
-      gd.clients_data[cid]->question_ready_flag = 1;
-      while (!gd.clients_data[cid]->answer_ready_flag)
+      gd.clients_data[cid]->qst = q;      //toti clientii primesc intrebarile din baza de date
+      gd.clients_data[cid]->question_ready_flag = 1; 
+      while (!gd.clients_data[cid]->answer_ready_flag)      //pentru a lua toti userii in ordinea inregistrarii lor
         sleep(1);
       gd.clients_data[cid]->answer_ready_flag = 0;
     }
@@ -184,22 +184,23 @@ void game_loop(struct game_data gd)
   int id_scor_maxim=-1;
   for(int cid = 0; cid < gd.nr_clients; cid++)
   {
-      if(gd.clients_data[cid]->scor>scor_maxim)
+      if(gd.clients_data[cid]->scor>scor_maxim)     // verific care este cel care are scor ul maxim
       {
-        scor_maxim=gd.clients_data[cid]->scor;
-        id_scor_maxim=cid;
+        scor_maxim=gd.clients_data[cid]->scor;      //daca sunt mai multi cu acelasi scor,
+        id_scor_maxim=cid;       //il iau pe cel care s-a conectat primul
       }
   }
   for(int cid = 0; cid < gd.nr_clients; cid++)
   {
-    sprintf(gd.clients_data[cid]->game_winner,
-    "Castigatorul este: %s",
-    gd.clients_data[id_scor_maxim]->name);
+    if(cid == id_scor_maxim) 
+      sprintf(gd.clients_data[cid]->game_winner,"Tu esti castigatorul jocului! Felicitari!\n");
+    else
+      sprintf(gd.clients_data[cid]->game_winner,"Castigatorul este: %s\n",gd.clients_data[id_scor_maxim]->name);
     gd.clients_data[cid]->game_over_flag=1;
   }
   for(int cid = 0; cid < gd.nr_clients; cid++)
   {
-    pthread_join(gd.clients_threads[cid],NULL);
+    pthread_join(gd.clients_threads[cid],NULL);   /////asteapta ca acel thread sa termine
   }
 }
 
@@ -207,9 +208,13 @@ void game_loop(struct game_data gd)
 
 int main()
 {
+  int desfasurare_joc=1;
   struct game_data gd;
-  gd.nr_clients = 0;
-  gd = wait_clients(gd);
-  game_loop(gd);
+  while(desfasurare_joc)
+  {
+    gd.nr_clients = 0;
+    gd = wait_clients(gd);
+    game_loop(gd);
+  }
   return 0;
 }

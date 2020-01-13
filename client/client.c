@@ -1,8 +1,3 @@
-/* cliTCPIt.c - Exemplu de client TCP
-   Trimite un numar la server; primeste de la server numarul incrementat.
-         
-   Autor: Lenuta Alboaie  <adria@infoiasi.ro> (c)2009
-*/
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -19,9 +14,10 @@ extern int errno;
 /* portul de conectare la server*/
 int port;
 
-void send_username(int);
+void send_username(int);      //functiile pe care le poate apela clientul
 void send_answer(int);
 void end_game(int);
+void end_game_forced(int);
 
 int main (int argc, char *argv[])
 {
@@ -62,6 +58,7 @@ int main (int argc, char *argv[])
       perror ("[client]Eroare la connect().\n");
       return errno;
     }
+
   int running=1;
   while(running)
   {
@@ -83,6 +80,9 @@ int main (int argc, char *argv[])
       end_game(sd);
       running=0;
       break;
+    case 4:
+      end_game_forced(sd);
+      break;
 
     default:
       running=0;
@@ -92,14 +92,7 @@ int main (int argc, char *argv[])
   close(sd);
 }
 
-void end_game(int sd)
-{
-  int scor;
-  read(sd,&scor,sizeof(int));
-  printf("Jocul s-a sfarsit!\nScorul tau este: %d\n",scor);
-}
-
-void send_username(int sd)
+void send_username(int sd)      //initializeaza user-ul
 {
   char username[100];
   printf("Introdu un username: ");
@@ -109,15 +102,33 @@ void send_username(int sd)
   write(sd,username,username_length);
 }
 
-void send_answer(int sd)
+void send_answer(int sd)      //desfasoara sesiunea de joc
 {
   int answer;
   int question_length;
   char question[500];
   read(sd,&question_length,sizeof(int));
   read(sd,question,question_length);
-  printf("%s", question);
+  printf("%s \n", question);
   scanf("%d", &answer);
+  while(answer<1 || answer>4)
+  {
+    printf("Acest numar nu exista! Introdu alt numar!\n");
+    scanf("%d", &answer);
+  }
   write(sd, &answer,sizeof(int));
 }
 
+void end_game(int sd)
+{
+  int scor;
+  read(sd,&scor,sizeof(int));
+  printf("Jocul s-a sfarsit!\nScorul tau este: %d\n",scor);
+}
+
+void end_game_forced(int sd)
+{
+  int scor;
+  read(sd,&scor,sizeof(int));
+  printf("Ati acumulat %d puncte!\n S-a terminat jocul pentru dumneavoastra!\n Puteti inchide consola!\n", scor);
+}

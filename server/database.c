@@ -12,7 +12,7 @@
 
 #include "database.h"
 
-sqlite3 *open_db()
+sqlite3 *open_db()          //imi deschide baza de date
 {
     sqlite3 *db;
     char *zErrMsg = 0;
@@ -32,13 +32,13 @@ sqlite3 *open_db()
     return db;
 }
 
-int close_db(sqlite3 *db)
+int close_db(sqlite3 *db)           //imi inchide baza de date
 {
     sqlite3_close(db);
     return 0;
 }
 
-struct question get_question(sqlite3 *db, int question_id)
+struct question get_question(sqlite3 *db, int question_id)          //iau intrebarea din baza de date dupa id 
 {
     sqlite3_stmt *stmt;
     const char *tail;
