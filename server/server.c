@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <sqlite3.h>
+#include <signal.h>
 #include "database.h"
 
 /* portul folosit */
@@ -33,6 +34,7 @@ struct game_data      //datele despre joc
   int nr_clients;
   struct client_data *clients_data[100];
   pthread_t clients_threads[100];
+  int sd;
 };
 
 /* codul de eroare returnat de anumite apeluri */
@@ -45,10 +47,14 @@ static void *thread_loop(void *arg)
   int cmd;
   int username_length;
   char username[100];
+  strcpy(username,"deconectat");
   cmd = 1;
   write(sd, &cmd, sizeof(int));
-  read(sd, &username_length, sizeof(int));
-  read(sd, username, username_length);
+  if(read(sd, &username_length, sizeof(int)) > 0)
+  {
+    if(read(sd, username, username_length) > 0)
+      ;
+  }
   strcpy(cd->name, username);
   printf("User inregistrat: %s\n", cd->name);
   fflush(stdout);
@@ -76,9 +82,12 @@ static void *thread_loop(void *arg)
     int buffer_len = strlen(buffer) + 1;
     write(sd, &buffer_len, sizeof(int));
     write(sd, buffer, buffer_len);
-    read(sd, &raspuns, sizeof(int));      
-    if (raspuns == cd->qst.raspuns_corect)
-      cd->scor += 10;
+    
+    if(read(sd, &raspuns, sizeof(int)) > 0)
+    {
+      if (raspuns == cd->qst.raspuns_corect)
+        cd->scor += 10;
+    }
     cd->answer_ready_flag = 1;                           //nu i mai mancau dinozaurii
   }
 
@@ -88,12 +97,12 @@ static void *thread_loop(void *arg)
   cd->game_over_flag = 1;
 }
 
-struct game_data wait_clients(struct game_data gd)
+struct game_data init_server(struct game_data gd)
 {
   struct sockaddr_in server; // structura folosita de server
   struct sockaddr_in from;
-  int sd;
   int length = sizeof(from);
+  int sd;
   /* crearea unui socket */
   if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
   {
@@ -126,13 +135,23 @@ struct game_data wait_clients(struct game_data gd)
   {
     perror("[server]Eroare la listen().\n");
   }
+  gd.sd=sd;
+  return gd;
+}
+
+
+struct game_data wait_clients(struct game_data gd)
+{
+  struct sockaddr_in server; // structura folosita de server
+  struct sockaddr_in from;
+  int length = sizeof(from);
   printf("Asteptam sa se conecteze 5 clienti\n");
   fflush(stdout);
   while (gd.nr_clients < 5)
   {
     int client_sd;
     /* acceptam un client (stare blocanta pina la realizarea conexiunii) */
-    if ((client_sd = accept(sd, (struct sockaddr *)&from, &length)) < 0)
+    if ((client_sd = accept(gd.sd, (struct sockaddr *)&from, &length)) < 0)
     {
       perror("[server]Eroare la accept().\n");
       continue;
@@ -210,10 +229,13 @@ int main()
 {
   int desfasurare_joc=1;
   struct game_data gd;
-  gd = wait_clients(gd);
+  signal(SIGPIPE,SIG_IGN);
+  gd = init_server(gd);
+
   while(desfasurare_joc)
   {
     gd.nr_clients = 0;
+    gd = wait_clients(gd);
     game_loop(gd);
   }
   return 0;

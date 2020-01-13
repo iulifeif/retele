@@ -118,8 +118,7 @@ void send_answer(int sd)      //desfasoara sesiunea de joc
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = 0;
   sigaction(SIGALRM, &sa, NULL);
-
-  alarm(5);
+  alarm(10);
 
   if (scanf("%d", &answer) == 1)
   {
