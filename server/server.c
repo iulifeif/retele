@@ -199,24 +199,9 @@ void game_loop(struct game_data gd)
       gd.clients_data[cid]->answer_ready_flag = 0;
     }
   }
-  int scor_maxim=0;
-  int id_scor_maxim=-1;
   for(int cid = 0; cid < gd.nr_clients; cid++)
-  {
-      if(gd.clients_data[cid]->scor>scor_maxim)     // verific care este cel care are scor ul maxim
-      {
-        scor_maxim=gd.clients_data[cid]->scor;      //daca sunt mai multi cu acelasi scor,
-        id_scor_maxim=cid;       //il iau pe cel care s-a conectat primul
-      }
-  }
-  for(int cid = 0; cid < gd.nr_clients; cid++)
-  {
-    if(cid == id_scor_maxim) 
-      sprintf(gd.clients_data[cid]->game_winner,"Tu esti castigatorul jocului! Felicitari!\n");
-    else
-      sprintf(gd.clients_data[cid]->game_winner,"Castigatorul este: %s\n",gd.clients_data[id_scor_maxim]->name);
     gd.clients_data[cid]->game_over_flag=1;
-  }
+    
   for(int cid = 0; cid < gd.nr_clients; cid++)
   {
     pthread_join(gd.clients_threads[cid],NULL);   /////asteapta ca acel thread sa termine
